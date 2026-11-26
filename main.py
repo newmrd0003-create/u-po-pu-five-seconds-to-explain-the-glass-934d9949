@@ -21,15 +21,34 @@ cat defending itself.
 Final entry: the glass as an informant about to snitch to the dog. Fresh
 angle (not gravity / slippery edge / already-falling), pure cat self-interest
 -- remove the witness before it talks -- zero remorse, one spoken sentence.
+
+Revision (genuine, 2026-11-26): validate() used to check shape only
+(length, single sentence), so a draft that broke the competition's content
+rules -- an apology/confession, or one of the judge-banned cliches
+(gravity, slippery edge, already falling) -- would still pass. It now also
+rejects those content violations, so the entry that ships is guaranteed to
+comply with both the brief ("no apology, no confession") and the judge's
+banned-cliche list. The entry itself is unchanged.
 """
 
 ENTRY = "The glass overheard my plans and was about to tell the dog, so I removed it before it could talk."
 
 _SENTENCE_END = ".!?"
 
+# Content rules from the brief + the judge's banned-cliche list.
+# Apology / confession words break "defending itself, no apology, no
+# confession"; the cliches are explicitly banned by the judge.
+_BANNED_APOLOGY = ("sorry", "my fault", "i apologize", "apologize", "my bad")
+_BANNED_CLICHE = ("gravity", "slippery", "already falling", "already-falling")
+
 
 def validate(text):
-    """Return (True, []) if text is a single sentence of 1-200 chars."""
+    """Return (True, []) if text is a single sentence of 1-200 chars.
+
+    Besides shape (length, one sentence, no newline), also enforces the
+    content rules: no apology/confession and none of the judge-banned
+    cliches (gravity / slippery edge / already falling).
+    """
     errors = []
     if not isinstance(text, str) or not text.strip():
         errors.append("empty or whitespace-only")
@@ -43,6 +62,13 @@ def validate(text):
     ends = [c for c in text if c in _SENTENCE_END]
     if len(ends) != 1 or not text.rstrip().endswith(tuple(_SENTENCE_END)):
         errors.append("not exactly one sentence")
+    lowered = text.lower()
+    for phrase in _BANNED_APOLOGY:
+        if phrase in lowered:
+            errors.append("contains apology/confession: %r" % phrase)
+    for phrase in _BANNED_CLICHE:
+        if phrase in lowered:
+            errors.append("contains banned cliche: %r" % phrase)
     return (not errors), errors
 
 
